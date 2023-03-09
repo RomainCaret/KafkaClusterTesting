@@ -1,0 +1,3 @@
+timestamp,topic,producerId,eventsId,numbers, linger.ms, batch.size
+10,consumer-write,producer1,3600,9,1000,1000
+550,consumer-end,producer1,3600,3,1000,1000

@@ -1,0 +1,20 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: manager
+display_name: manager
+is_deterministic: false
+version: 0.21
+type: command
+inputs:
+  brokerAddress:
+    type: string
+    description: "Broker address"
+  nb_consumers_producers:
+    type: integer
+    description: "Number of consumers and producers"
+code: ./src_manager
+environment: azureml:kafka-custom-env@latest
+command: >-
+  python manager.py
+  --brokerAddress ${{inputs.brokerAddress}}
+  --nb_consumers_producers ${{inputs.nb_consumers_producers}}
+  

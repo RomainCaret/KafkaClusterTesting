@@ -1,0 +1,25 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: consumer
+display_name: consumer
+is_deterministic: false
+version: 0.51
+type: command
+inputs:
+  num_consumer:
+    type: string
+    description: "numero du consumer"
+    default: "Consumer"
+  num_machine:
+    type: string
+    description: "numero de la machine"
+    default: "Machine"
+  brokerAddress:
+    type: string
+    description: "Broker address"
+code: ./src_consumer
+environment: azureml:kafka-custom-env@latest
+command: >-
+  python consumer.py
+  --num_consumer ${{inputs.num_consumer}}
+  --num_machine ${{inputs.num_machine}}
+  --brokerAddress ${{inputs.brokerAddress}}

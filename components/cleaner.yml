@@ -1,0 +1,13 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: cleaner
+display_name: cleaner
+version: 0.6
+type: command
+inputs:
+  data_csv:
+    type: uri_folder
+code: ./src_cleaner
+environment: azureml:flight-delays-custom-env@latest
+command: >-
+  python cleaner.py
+  --data_csv ${{inputs.data_csv}}

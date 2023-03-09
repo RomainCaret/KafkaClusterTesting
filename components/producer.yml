@@ -1,0 +1,30 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: producer
+display_name: producer
+is_deterministic: false
+version: 0.71
+type: command
+inputs:
+  num_producer:
+    type: string
+    description: "numero du producer"
+    default: "Producer"
+  num_machine:
+    type: string
+    description: "numero de la machine"
+    default: "Machine"
+  brokerAddress:
+    type: string
+    description: "Broker address"
+  machineKafka:
+    type: string
+    description: "Machine Kafka"
+    default: "m1"
+code: ./src_producer
+environment: azureml:kafka-custom-env@latest
+command: >-
+  python producer.py
+  --num_producer ${{inputs.num_producer}}
+  --num_machine ${{inputs.num_machine}}
+  --brokerAddress ${{inputs.brokerAddress}}
+  --machineKafka ${{inputs.machineKafka}}

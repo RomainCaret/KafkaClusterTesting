@@ -1,0 +1,118 @@
+{
+  "cells": [
+    {
+      "cell_type": "code",
+      "source": [
+        "server = \"aks-kafka-DS2_v2\"\n",
+        "\n",
+        "nb_brokers = 6\n",
+        "nb_partitions = 6\n",
+        "retention_ms = -1\n",
+        "retention_bytes = -1\n",
+        "\n",
+        "# 30 minutes\n",
+        "retention_ms_bg = 1800000 \n",
+        "retention_bytes_bg = -1\n",
+        "servers = '20.13.97.149 20.13.96.139 20.13.97.158 20.13.97.200 20.23.75.11 20.13.97.178'\n",
+        "\n",
+        "\n",
+        "# split the string into a list\n",
+        "listOfServers = servers.split()\n",
+        "# add the port number 9094 to each IP address\n",
+        "listOfServers = [i + ':9094' for i in listOfServers]"
+      ],
+      "outputs": [],
+      "execution_count": 3,
+      "metadata": {
+        "gather": {
+          "logged": 1674296299107
+        }
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "print(\"az aks get-credentials --resource-group rg-sbx-aiops --name \" + server)\n",
+        "print(\"\\n\")\n",
+        "print(\"helm install kafka bitnami/kafka --set externalAccess.enabled=true --set externalAccess.service.type=LoadBalancer --set externalAccess.service.ports.external=9094 --set rbac.create=true --set externalAccess.autoDiscovery.enabled=true --set serviceAccount.create=true --set replicaCount=\" + str(nb_brokers) +\" --set zookeeper.replicaCount=\" + str(nb_brokers))\n",
+        "print(\"\\n\")\n",
+        "print(\"kubectl get svc --namespace default -l \\\"app.kubernetes.io/name=kafka,app.kubernetes.io/instance=kafka,app.kubernetes.io/component=kafka,pod\\\" -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}'\")\n",
+        "print(\"\\n\")\n",
+        "\n",
+        "# Add the topic consumer-read\n",
+        "print(\"kafka-topics.bat --create --topic consumer-read --bootstrap-server \" + ','.join(listOfServers) + \" --replication-factor 3 --partitions \" + str(nb_partitions))\n",
+        "# Add the topic consumer-write\n",
+        "print(\"kafka-topics.bat --create --topic consumer-write --bootstrap-server \" + ','.join(listOfServers) + \" --replication-factor 3 --partitions \" + str(nb_partitions))\n",
+        "# Add the topic topic-aiops\n",
+        "print(\"kafka-topics.bat --create --topic topic-aiops --bootstrap-server \" + ','.join(listOfServers) + \" --replication-factor 3 --partitions \" + str(nb_partitions))\n",
+        "# Add the topic background-topic1\n",
+        "print(\"kafka-topics.bat --create --topic background-topic1 --bootstrap-server \" + ','.join(listOfServers) + \" --replication-factor 3 --partitions \" + str(nb_partitions))\n",
+        "# Add the topic background-topic2\n",
+        "print(\"kafka-topics.bat --create --topic background-topic2 --bootstrap-server \" + ','.join(listOfServers) + \" --replication-factor 3 --partitions \" + str(nb_partitions))\n",
+        "\n",
+        "print(\"\\n\")\n",
+        "# Set the retention time for the topic topic-aiops\n",
+        "print(\"kafka-configs.bat --bootstrap-server \" + ','.join(listOfServers) + \" --alter --entity-type topics --entity-name topic-aiops --add-config retention.ms=\" + str(retention_ms) + \",retention.bytes=\" + str(retention_bytes))\n",
+        "# Set the retention time for the topic background-topic1\n",
+        "print(\"kafka-configs.bat --bootstrap-server \" + ','.join(listOfServers) + \" --alter --entity-type topics --entity-name background-topic1 --add-config retention.ms=\" + str(retention_ms_bg) + \",retention.bytes=\" + str(retention_bytes_bg))\n",
+        "# Set the retention time for the topic background-topic2\n",
+        "print(\"kafka-configs.bat --bootstrap-server \" + ','.join(listOfServers) + \" --alter --entity-type topics --entity-name background-topic2 --add-config retention.ms=\" + str(retention_ms_bg) + \",retention.bytes=\" + str(retention_bytes_bg))\n",
+        "\n",
+        "print(\"\\n\")"
+      ],
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": "az aks get-credentials --resource-group rg-sbx-aiops --name aks-kafka-DS2_v2\n\n\nhelm install kafka bitnami/kafka --set externalAccess.enabled=true --set externalAccess.service.type=LoadBalancer --set externalAccess.service.ports.external=9094 --set rbac.create=true --set externalAccess.autoDiscovery.enabled=true --set serviceAccount.create=true --set replicaCount=6 --set zookeeper.replicaCount=6\n\n\nkubectl get svc --namespace default -l \"app.kubernetes.io/name=kafka,app.kubernetes.io/instance=kafka,app.kubernetes.io/component=kafka,pod\" -o jsonpath='{.items[*].status.loadBalancer.ingress[0].ip}'\n\n\nkafka-topics.bat --create --topic consumer-read --bootstrap-server 20.13.97.149:9094,20.13.96.139:9094,20.13.97.158:9094,20.13.97.200:9094,20.23.75.11:9094,20.13.97.178:9094 --replication-factor 3 --partitions 6\nkafka-topics.bat --create --topic consumer-write --bootstrap-server 20.13.97.149:9094,20.13.96.139:9094,20.13.97.158:9094,20.13.97.200:9094,20.23.75.11:9094,20.13.97.178:9094 --replication-factor 3 --partitions 6\nkafka-topics.bat --create --topic topic-aiops --bootstrap-server 20.13.97.149:9094,20.13.96.139:9094,20.13.97.158:9094,20.13.97.200:9094,20.23.75.11:9094,20.13.97.178:9094 --replication-factor 3 --partitions 6\nkafka-topics.bat --create --topic background-topic1 --bootstrap-server 20.13.97.149:9094,20.13.96.139:9094,20.13.97.158:9094,20.13.97.200:9094,20.23.75.11:9094,20.13.97.178:9094 --replication-factor 3 --partitions 6\nkafka-topics.bat --create --topic background-topic2 --bootstrap-server 20.13.97.149:9094,20.13.96.139:9094,20.13.97.158:9094,20.13.97.200:9094,20.23.75.11:9094,20.13.97.178:9094 --replication-factor 3 --partitions 6\n\n\nkafka-configs.bat --bootstrap-server 20.13.97.149:9094,20.13.96.139:9094,20.13.97.158:9094,20.13.97.200:9094,20.23.75.11:9094,20.13.97.178:9094 --alter --entity-type topics --entity-name topic-aiops --add-config retention.ms=-1,retention.bytes=-1\nkafka-configs.bat --bootstrap-server 20.13.97.149:9094,20.13.96.139:9094,20.13.97.158:9094,20.13.97.200:9094,20.23.75.11:9094,20.13.97.178:9094 --alter --entity-type topics --entity-name background-topic1 --add-config retention.ms=1800000,retention.bytes=-1\nkafka-configs.bat --bootstrap-server 20.13.97.149:9094,20.13.96.139:9094,20.13.97.158:9094,20.13.97.200:9094,20.23.75.11:9094,20.13.97.178:9094 --alter --entity-type topics --entity-name background-topic2 --add-config retention.ms=1800000,retention.bytes=-1\n\n\n"
+        }
+      ],
+      "execution_count": 4,
+      "metadata": {
+        "gather": {
+          "logged": 1674296301403
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "kernel_info": {
+      "name": "python3"
+    },
+    "kernelspec": {
+      "name": "python3",
+      "language": "python",
+      "display_name": "Python 3 (ipykernel)"
+    },
+    "language_info": {
+      "name": "python",
+      "version": "3.8.5",
+      "mimetype": "text/x-python",
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "pygments_lexer": "ipython3",
+      "nbconvert_exporter": "python",
+      "file_extension": ".py"
+    },
+    "nteract": {
+      "version": "nteract-front-end@1.0.0"
+    },
+    "orig_nbformat": 4,
+    "vscode": {
+      "interpreter": {
+        "hash": "916dbcbb3f70747c44a77c7bcd40155683ae19c65e1c03b4aa3499c5328201f1"
+      }
+    },
+    "microsoft": {
+      "host": {
+        "AzureML": {
+          "notebookHasBeenCompleted": true
+        }
+      }
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 2
+}
